@@ -1,0 +1,6 @@
+@JewBank_HostAddress = http://localhost:9090
+
+GET {{JewBank_HostAddress}}/api/Account
+Accept: application/json
+
+###
