@@ -16,12 +16,17 @@ public class AccountController : ControllerBase
         _dbContext = context;
     }
 
-    [HttpGet]
+    [HttpGet("{id}")]
     
     //Return account info like balanc etc.
-    public async Task<ActionResult<IEnumerable<Account>>> GetAccount()
+    public async Task<ActionResult<Account>> GetAccount(string id)
     {
-        var accounts = await _dbContext.Accounts.ToListAsync();
-        return Ok(accounts);
+        var account = await _dbContext.Accounts.FindAsync(id);
+
+        if (account == null)
+        {
+            return NotFound(new { message = $"Account with ID {id} not found." });
+        }
+        return Ok(account);
     }
 }
