@@ -562,26 +562,25 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\uczen\\.nuget\\packages\\": {}
+    "/Users/jakubadach/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\uczen\\Desktop\\JewBank\\JewBank\\JewBank.csproj",
+      "projectUniqueName": "/Users/jakubadach/Documents/JewBank/JewBank/JewBank.csproj",
       "projectName": "JewBank",
-      "projectPath": "C:\\Users\\uczen\\Desktop\\JewBank\\JewBank\\JewBank.csproj",
-      "packagesPath": "C:\\Users\\uczen\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\uczen\\Desktop\\JewBank\\JewBank\\obj\\",
+      "projectPath": "/Users/jakubadach/Documents/JewBank/JewBank/JewBank.csproj",
+      "packagesPath": "/Users/jakubadach/.nuget/packages/",
+      "outputPath": "/Users/jakubadach/Documents/JewBank/JewBank/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\uczen\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/Users/jakubadach/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "/opt/homebrew/Cellar/dotnet/10.0.400/libexec/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -644,7 +643,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Users\\uczen\\.dotnet\\sdk\\10.0.401/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/10.0.400/libexec/sdk/10.0.400/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

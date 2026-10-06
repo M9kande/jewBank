@@ -17,7 +17,9 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
+    
+    //Return account info like balanc etc.
+    public async Task<ActionResult<IEnumerable<Account>>> GetAccount()
     {
         var accounts = await _dbContext.Accounts.ToListAsync();
         return Ok(accounts);

@@ -9,6 +9,7 @@ public class Account
     public string AccountNo { get; set; } = string.Empty;
     public string Iban { get; set; } = string.Empty;
     public string Currency { get; set; } = string.Empty;
+    public decimal Balance { get; set; } = 0.00m;
     public AccountType AccountType { get; set; }
     public AccountStatus Status { get; set; }
     public DateTime OpenedAt { get; set; }
