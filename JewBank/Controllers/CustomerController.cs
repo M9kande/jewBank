@@ -55,7 +55,7 @@ public class CustomerController : Controller
     [HttpPatch("{id}")]
     public async Task<ActionResult> ChangeCustomerStatus(string id)
     {
-        var customer = _dbContext.Customers.Find(id);
+        var customer = await _dbContext.Customers.FindAsync(id);
 
         if (customer == null)
         {
