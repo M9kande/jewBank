@@ -13,7 +13,7 @@ public class AccountController : ControllerBase
 
     public AccountController(JewBankDbContext context)
     {
-        _dbContext = context;
+        _dbContext = context;   
     }
 
     [HttpGet("{id}")]
