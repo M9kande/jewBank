@@ -12,10 +12,7 @@ namespace JewBank.Controllers;
 public class AccountController : ControllerBase
 {
     private readonly JewBankDbContext _dbContext;
-
     private const string DefaultCountryCode = "PL";
-    private const string DefaultBankCode = "12345678"; // replace with your bank's real 8-digit code
-
     public AccountController(JewBankDbContext context)
     {
         _dbContext = context;
@@ -114,51 +111,8 @@ public class AccountController : ControllerBase
     // Builds a valid IBAN: country code + 2 check digits + bank code + account number.
     private static string GenerateIbanNumber(
         string accountNumber,
-        string bankCode = DefaultBankCode,
         string countryCode = DefaultCountryCode)
     {
-        if (string.IsNullOrWhiteSpace(accountNumber) || !accountNumber.All(char.IsDigit))
-            throw new ArgumentException("Account number must contain digits only.", nameof(accountNumber));
-
-        var bban = bankCode + accountNumber;
-
-        // ISO 13616: append country code + "00", convert letters to numbers, check digits = 98 - (value mod 97)
-        var checkDigits = 98 - Mod97(bban + countryCode + "00");
-
-        return $"{countryCode}{checkDigits:D2}{bban}";
-    }
-
-    // Validates an IBAN checksum (useful later for incoming transfers).
-    private static bool IsValidIban(string iban)
-    {
-        if (string.IsNullOrWhiteSpace(iban)) return false;
-
-        iban = iban.Replace(" ", "").ToUpperInvariant();
-        if (iban.Length < 15 || iban.Length > 34 || !iban.All(char.IsLetterOrDigit)) return false;
-
-        // Move first 4 chars to the end
-        var rearranged = iban[4..] + iban[..4];
-        return Mod97(rearranged) == 1;
-    }
-
-    // Computes mod 97 piece by piece, so no BigInteger is needed.
-    // Letters map to 10..35 (A=10 ... Z=35), which takes two digits.
-    private static int Mod97(string input)
-    {
-        int remainder = 0;
-        foreach (var ch in input)
-        {
-            if (char.IsDigit(ch))
-            {
-                remainder = (remainder * 10 + (ch - '0')) % 97;
-            }
-            else
-            {
-                int value = char.ToUpperInvariant(ch) - 'A' + 10;
-                remainder = (remainder * 100 + value) % 97;
-            }
-        }
-
-        return remainder;
+        return countryCode + accountNumber;
     }
 }
