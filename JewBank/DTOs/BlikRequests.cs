@@ -14,7 +14,7 @@ public class BlikCodeResponse
 
 public class InitiateBlikPaymentRequest
 {
-    public required String CustomerId { get; set; }
+    public required String BlikCode  { get; set; }
     public required String MerchantId { get; set; }
     public decimal Amount { get; set; }
 }

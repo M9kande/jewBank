@@ -4,5 +4,5 @@ public enum BlikPaymentStatus
 {
     Pending,
     Approved,
-    Declined
+    Failed
 }
