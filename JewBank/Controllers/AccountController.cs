@@ -55,7 +55,6 @@ public class AccountController : ControllerBase
             AccountId = Guid.NewGuid().ToString(),
             CustomerId = request.CustomerId,
             AccountNo = accountNo,
-            Iban = GenerateIbanNumber(accountNo),
             Currency = request.Currency,
             AccountType = request.AccountType,
             Status = AccountStatus.Active,
@@ -93,11 +92,9 @@ public class AccountController : ControllerBase
         return Ok(new { message = $"Account status changed to {account.Status}." });
     }
     
-    
-    
 
     // Generates a random numeric account number (16 digits by default).
-    private static string GenerateAccountNumber(int length = 16)
+    private static string GenerateAccountNumber(int length = 26)
     {
         var digits = new char[length];
         for (int i = 0; i < length; i++)
@@ -106,13 +103,5 @@ public class AccountController : ControllerBase
         }
 
         return new string(digits);
-    }
-
-    // Builds a valid IBAN: country code + 2 check digits + bank code + account number.
-    private static string GenerateIbanNumber(
-        string accountNumber,
-        string countryCode = DefaultCountryCode)
-    {
-        return countryCode + accountNumber;
     }
 }

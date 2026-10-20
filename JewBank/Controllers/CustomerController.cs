@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace JewBank.Controllers;
 
 [ApiController]
-[Route("api/[customer]")]
+[Route("api/[controller]")]
 
 public class CustomerController : Controller
 {

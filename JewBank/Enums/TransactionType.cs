@@ -3,5 +3,7 @@ namespace JewBank.Enums;
 public enum TransactionType
 {
     Transfer,
-    BlikPayment
+    Withdrawal,
+    Deposit,
+    Blik
 }
