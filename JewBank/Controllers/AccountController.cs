@@ -70,6 +70,23 @@ public class AccountController : ControllerBase
         return CreatedAtAction(nameof(GetAccount), new { id = account.AccountId }, account);
     }
     
+    [HttpGet("{id}/transactions")]
+    public async Task<IActionResult> GetTransactions(string id)
+    {
+        var account = await _dbContext.Accounts.FindAsync(id);
+        if (account == null)
+        {
+            return NotFound(new { message = $"Account with ID {id} not found." });
+        }
+
+        // Query transactions related to the account
+        var transactions = await _dbContext.Transactions
+            .Where(t => t.SourceAccountId == id || t.TargetAccountId == id)  // Finds both transfers sent and transfers received
+            .ToListAsync();
+        
+        return Ok(transactions);
+    }  
+    
     public async Task<ActionResult> ChangeAccountStatus(string id)
     {
         var account = await _dbContext.Accounts.FindAsync(id);
