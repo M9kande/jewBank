@@ -4,13 +4,17 @@ using JewBank.Enums;
 
 public class AuditLog
 {
-    public required string AuditId { get; set; } = string.Empty;
-    public string ActorIdentityId { get; set; } = string.Empty;
-    public required string CustomerId { get; set; } = string.Empty;
-    public string EntityType { get; set; } = string.Empty;
-    public string EntityId { get; set; } = string.Empty;
-    public AuditAction Action { get; set; }
-    public string? CorrelationId { get; set; }
-    public DateTime OccurredAt { get; set; }
-    public ActorType ActorType { get; set; }
+    public required string AuditId { get; init; }
+    public string? ActorIdentityId { get; init; }
+    public ActorType ActorType { get; init; }
+    public string? CustomerId { get; init; }
+
+    public AuditEntityType EntityType { get; init; }
+    public required string EntityId { get; init; }
+    public AuditAction Action { get; init; }
+
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+    public string? CorrelationId { get; init; }
+    public string? IpAddress { get; init; }
+    public string? DetailsJson { get; init; }
 }
