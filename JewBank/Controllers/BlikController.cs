@@ -157,7 +157,9 @@ public class BlikController : ControllerBase
         if (payment == null || payment.Status != BlikPaymentStatus.Pending)
         {
             return BadRequest(new { message = "Payment not found or already processed" });
-        };
+        }
+
+        ;
 
         if (!request.Accept)
         {
@@ -173,26 +175,12 @@ public class BlikController : ControllerBase
             await _dbContext.SaveChangesAsync();
             return BadRequest(new { message = "Insufficient Funds." });
         }
-        
-        
-
-
+        return BadRequest(new { message = "Something went wrong" });
     }
-    
-    
 
     private static string HashBlikCode(string code)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(code));
         return Convert.ToHexString(bytes);
     }
-    
-    
-    
-    
-    
-    
-
-
-
 }
