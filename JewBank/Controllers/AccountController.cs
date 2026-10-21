@@ -15,7 +15,7 @@ public class AccountController : ControllerBase
     private const string DefaultCountryCode = "PL";
     public AccountController(JewBankDbContext context)
     {
-        _dbContext = context;
+        _dbContext = context;   
     }
 
     [HttpGet("{id}")]

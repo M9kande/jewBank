@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "targets": {
     "net10.0": {
       "Microsoft.AspNetCore.OpenApi/10.0.12": {
@@ -562,25 +562,25 @@
     ]
   },
   "packageFolders": {
-    "/Users/jakubadach/.nuget/packages/": {}
+    "/home/dominik/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/jakubadach/Documents/JewBank/JewBank/JewBank.csproj",
+      "projectUniqueName": "/home/dominik/RiderProjects/jewBank/JewBank/JewBank.csproj",
       "projectName": "JewBank",
-      "projectPath": "/Users/jakubadach/Documents/JewBank/JewBank/JewBank.csproj",
-      "packagesPath": "/Users/jakubadach/.nuget/packages/",
-      "outputPath": "/Users/jakubadach/Documents/JewBank/JewBank/obj/",
+      "projectPath": "/home/dominik/RiderProjects/jewBank/JewBank/JewBank.csproj",
+      "packagesPath": "/home/dominik/.nuget/packages/",
+      "outputPath": "/home/dominik/RiderProjects/jewBank/JewBank/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/jakubadach/.nuget/NuGet/NuGet.Config"
+        "/home/dominik/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "/opt/homebrew/Cellar/dotnet/10.0.400/libexec/library-packs": {},
+        "/usr/lib/dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -600,7 +600,7 @@
         "auditLevel": "low",
         "auditMode": "all"
       },
-      "SdkAnalysisLevel": "10.0.400"
+      "SdkAnalysisLevel": "10.0.100"
     },
     "frameworks": {
       "net10.0": {
@@ -643,7 +643,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/10.0.400/libexec/sdk/10.0.400/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/10.0.112/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
