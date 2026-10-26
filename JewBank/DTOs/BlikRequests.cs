@@ -18,9 +18,3 @@ public class InitiateBlikPaymentRequest
     public required String MerchantId { get; set; }
     public decimal Amount { get; set; }
 }
-
-public class ConfirmBlikPaymentRequest
-{
-    public bool Accept { get; set; }
-}
-

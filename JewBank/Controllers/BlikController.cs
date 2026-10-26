@@ -150,8 +150,7 @@ public class BlikController : ControllerBase
     }
 
     [HttpPost("payment/{paymentId}/confirm")]
-    public async Task<ActionResult<ConfirmBlikPaymentRequest>> ConfirmPayment(String paymentId,
-        [FromBody] ConfirmBlikPaymentRequest request)
+    public async Task<IActionResult> ConfirmPayment(String paymentId)
     {
         var payment = await _dbContext.BlikPayments.FindAsync(paymentId);
         if (payment == null || payment.Status != BlikPaymentStatus.Pending)
@@ -161,13 +160,6 @@ public class BlikController : ControllerBase
 
         ;
 
-        if (!request.Accept)
-        {
-            payment.Status = BlikPaymentStatus.Failed;
-            _dbContext.SaveChangesAsync();
-            return Ok(new { message = "Payment declined" });
-        }
-
         var account = await _dbContext.Accounts.FindAsync(payment.PayerAccountId);
         if (account == null || account.Balance < payment.Amount)
         {
@@ -175,8 +167,40 @@ public class BlikController : ControllerBase
             await _dbContext.SaveChangesAsync();
             return BadRequest(new { message = "Insufficient Funds." });
         }
-        return BadRequest(new { message = "Something went wrong" });
+
+        account.Balance -= payment.Amount;
+        payment.Status = BlikPaymentStatus.Approved;
+        payment.CompletedAt = DateTime.UtcNow;
+        
+        var code = await _dbContext.BlikCodes.FindAsync(payment.BlikCodeId);
+        if (code != null)
+        {
+            code.Status = BlikCodeStatus.Used;
+            code.UsedAt = DateTime.UtcNow;
+        }
+
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { message = "Payment authorized successfully" });
+        
     }
+
+    [HttpPost("payment/{paymentID}/reject")]
+    public async Task<IActionResult> RejectPayment(String paymentId)
+    {
+        var payment = await _dbContext.BlikPayments.FindAsync(paymentId);
+        if (payment == null || payment.Status != BlikPaymentStatus.Pending)
+        {
+            return BadRequest(new { message = "Payment not found or already processed" });
+        }
+
+        payment.Status = BlikPaymentStatus.Failed;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { message = "Payment rejected by User" });
+    }
+    
+    
 
     private static string HashBlikCode(string code)
     {
