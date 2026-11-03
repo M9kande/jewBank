@@ -2,12 +2,12 @@ namespace JewBank.Models;
 
 using JewBank.Enums;
 
-public class BlikCode
+public class BlihCode
 {
-    public required string BlikCodeId { get; set; } = string.Empty;
-    public required string BlikProfileId { get; set; } = string.Empty;
+    public required string BlihCodeId { get; set; } = string.Empty;
+    public required string BlihProfileId { get; set; } = string.Empty;
     public string CodeHash { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
     public DateTime? UsedAt { get; set; }
-    public BlikCodeStatus Status { get; set; }
+    public BlihCodeStatus Status { get; set; }
 }

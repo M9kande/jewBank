@@ -1,6 +1,6 @@
 namespace JewBank.Enums;
 
-public enum BlikPaymentStatus
+public enum BlihPaymentStatus
 {
     Pending,
     Approved,
