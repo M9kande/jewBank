@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JewBank")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9fabd271c72bcc63707b876124602b82a7818588")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6c9221f2229e68f95bac3f4ad05221f1440dfc1a")]
 [assembly: System.Reflection.AssemblyProductAttribute("JewBank")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JewBank")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

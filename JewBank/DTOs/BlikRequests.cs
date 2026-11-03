@@ -2,7 +2,6 @@ namespace JewBank.DTOs;
 
 public class GenerateBlikCodeRequest
 {
-    public required String CustomerId { get; set; }
     public required String AccountId { get; set; }
 }
 

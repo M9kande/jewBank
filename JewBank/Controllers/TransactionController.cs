@@ -41,7 +41,7 @@ public class TransactionController : ControllerBase
             SourceAccountId = request.SourceAccountId,
             TargetAccountId = request.TargetAccountId,
             Type = request.TransactionType,
-            Description = request.Description,
+            Title = request.Description,
             Status = TransactionStatus.Pending
         };
 

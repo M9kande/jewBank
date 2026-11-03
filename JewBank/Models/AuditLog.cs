@@ -2,6 +2,8 @@ namespace JewBank.Models;
 
 using JewBank.Enums;
 
+using System.ComponentModel.DataAnnotations;
+
 public class AuditLog
 {
     public required string AuditId { get; init; }

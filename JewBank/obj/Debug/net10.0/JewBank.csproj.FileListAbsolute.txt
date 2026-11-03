@@ -168,3 +168,4 @@ C:/Users/uczen/Desktop/JewBank/JewBank/obj/Debug/net10.0/ref/JewBank.dll
 /Users/jakubadach/Documents/JewBank/JewBank/obj/Debug/net10.0/JewBank.pdb
 /Users/jakubadach/Documents/JewBank/JewBank/obj/Debug/net10.0/JewBank.genruntimeconfig.cache
 /Users/jakubadach/Documents/JewBank/JewBank/obj/Debug/net10.0/ref/JewBank.dll
+/Users/jakubadach/Documents/JewBank/JewBank/obj/Debug/net10.0/JewBank.sourcelink.json

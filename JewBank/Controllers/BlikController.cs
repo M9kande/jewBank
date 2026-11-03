@@ -25,7 +25,7 @@ public class BlikController : ControllerBase
     [HttpPost("code")]
     public async Task<ActionResult<BlikCodeResponse>> GenerateCode([FromBody] GenerateBlikCodeRequest request)
     {
-        var profile = await _dbContext.BlikProfiles.FirstOrDefaultAsync(p => p.CustomerId == request.CustomerId);
+        var profile = await _dbContext.BlikProfiles.FirstOrDefaultAsync(p => p.AccountId == request.AccountId);
         
         if (profile == null)
         {
@@ -97,7 +97,7 @@ public class BlikController : ControllerBase
         }
 
         var profile = await _dbContext.Accounts.FindAsync(code.BlikProfileId);
-        var payerAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.CustomerId == profile!.CustomerId && a.Status == AccountStatus.Active);
+        var payerAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.AccountId == profile!.AccountId && a.Status == AccountStatus.Active);
 
         if (payerAccount == null)
         {
@@ -128,13 +128,13 @@ public class BlikController : ControllerBase
     
     // Customer
     [HttpGet("payment/pending/{customerId}")]
-    public async Task<IActionResult> GetPendingPayment(String customerId)
+    public async Task<IActionResult> GetPendingPayment(String accountId)
     {
         var pendingPayment = await _dbContext.BlikPayments.Join(_dbContext.Accounts, 
             payment => payment.BlikPaymentId,
             account => account.AccountId,
             (payment, account) => new {payment, account })
-            .Where(x => x.account.CustomerId == customerId && x.payment.Status == BlikPaymentStatus.Pending)
+            .Where(x => x.account.AccountId == accountId && x.payment.Status == BlikPaymentStatus.Pending)
             .Select(x => new
             {
                 x.payment.BlikPaymentId,
