@@ -5,5 +5,5 @@ public enum TransactionType
     Transfer,
     Withdrawal,
     Deposit,
-    Blik
+    Blih
 }

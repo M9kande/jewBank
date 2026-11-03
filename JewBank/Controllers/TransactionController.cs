@@ -76,7 +76,7 @@ public class TransactionController : ControllerBase
             return NotFound(new {message = $"Transaction with ID {id} not found."});
         }
 
-        if (transaction.Type == TransactionType.Blik)
+        if (transaction.Type == TransactionType.Blih)
         {
             return BadRequest(new {message = "Transaction type not supported."});
         }

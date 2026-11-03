@@ -11,7 +11,7 @@ public class JewBankDbContext : DbContext
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<MoneyTransaction> Transactions => Set<MoneyTransaction>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-    public DbSet<BlikCode>  BlikCodes => Set<BlikCode>();
-    public DbSet<BlikPayment> BlikPayments => Set<BlikPayment>();
-    public DbSet<BlikProfile> BlikProfiles => Set<BlikProfile>();
+    public DbSet<BlihCode>  BlihCodes => Set<BlihCode>();
+    public DbSet<BlihPayment> BlihPayments => Set<BlihPayment>();
+    public DbSet<BlihProfile> BlihProfiles => Set<BlihProfile>();
 }

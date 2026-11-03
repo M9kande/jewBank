@@ -11,25 +11,25 @@ namespace JewBank.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BlikController : ControllerBase
+public class BlihController : ControllerBase
 {
 
     private readonly JewBankDbContext _dbContext;
 
-    public BlikController(JewBankDbContext context)
+    public BlihController(JewBankDbContext context)
     {
         _dbContext = context;
     }
     
     // Customer
     [HttpPost("code")]
-    public async Task<ActionResult<BlikCodeResponse>> GenerateCode([FromBody] GenerateBlikCodeRequest request)
+    public async Task<ActionResult<BlihCodeResponse>> GenerateCode([FromBody] GenerateBlihCodeRequest request)
     {
-        var profile = await _dbContext.BlikProfiles.FirstOrDefaultAsync(p => p.AccountId == request.AccountId);
+        var profile = await _dbContext.BlihProfiles.FirstOrDefaultAsync(p => p.AccountId == request.AccountId);
         
         if (profile == null)
         {
-            return BadRequest(new { message = "Customer has not enabled blik" });            
+            return BadRequest(new { message = "Customer has not enabled blih" });            
         }
 
         String rawCode;
@@ -39,41 +39,41 @@ public class BlikController : ControllerBase
         do
         {
             rawCode = Random.Shared.Next(100000, 999999).ToString();
-            codeHash = HashBlikCode(rawCode);
+            codeHash = HashBlihCode(rawCode);
 
 
-            isCodeTaken = await _dbContext.BlikCodes.AnyAsync(c =>
-                (c.CodeHash == codeHash && c.Status == BlikCodeStatus.Active && c.ExpiresAt > DateTime.UtcNow));
+            isCodeTaken = await _dbContext.BlihCodes.AnyAsync(c =>
+                (c.CodeHash == codeHash && c.Status == BlihCodeStatus.Active && c.ExpiresAt > DateTime.UtcNow));
             
         } while (isCodeTaken);
         
         
         
-        var activeCodes = await _dbContext.BlikCodes
-            .Where(b => b.BlikProfileId == profile.BlikProfileId && b.Status == BlikCodeStatus.Active)
+        var activeCodes = await _dbContext.BlihCodes
+            .Where(b => b.BlihProfileId == profile.BlihProfileId && b.Status == BlihCodeStatus.Active)
             .ToListAsync();
 
 
         foreach (var code in activeCodes)
         {
-            code.Status = BlikCodeStatus.Expired;
+            code.Status = BlihCodeStatus.Expired;
         }
         
         var expiresAt = DateTime.UtcNow.AddHours(2);
 
-        var blikCodeEntity = new BlikCode
+        var blihCodeEntity = new BlihCode
         {
-            BlikCodeId = Guid.NewGuid().ToString(),
-            BlikProfileId = profile.BlikProfileId,
+            BlihCodeId = Guid.NewGuid().ToString(),
+            BlihProfileId = profile.BlihProfileId,
             CodeHash = codeHash,
             ExpiresAt = expiresAt,
-            Status = BlikCodeStatus.Active
+            Status = BlihCodeStatus.Active
         };
         
-        _dbContext.BlikCodes.Add(blikCodeEntity);
+        _dbContext.BlihCodes.Add(blihCodeEntity);
         await _dbContext.SaveChangesAsync();
 
-        return Ok(new BlikCodeResponse
+        return Ok(new BlihCodeResponse
         {
             Code = rawCode,
             ExpiresAt = expiresAt
@@ -83,45 +83,45 @@ public class BlikController : ControllerBase
     
     // Merchant
     [HttpPost("payment/initiate")]
-    public async Task<ActionResult<InitiateBlikPaymentRequest>> InitiatePayment(
-        [FromBody] InitiateBlikPaymentRequest request)
+    public async Task<ActionResult<InitiateBlihPaymentRequest>> InitiatePayment(
+        [FromBody] InitiateBlihPaymentRequest request)
     {
-        var codeHash = HashBlikCode(request.BlikCode);
+        var codeHash = HashBlihCode(request.BlihCode);
         
         
-        var code = await _dbContext.BlikCodes.FirstOrDefaultAsync(c => c.CodeHash == codeHash &&  c.Status == BlikCodeStatus.Active && c.ExpiresAt > DateTime.UtcNow);
+        var code = await _dbContext.BlihCodes.FirstOrDefaultAsync(c => c.CodeHash == codeHash &&  c.Status == BlihCodeStatus.Active && c.ExpiresAt > DateTime.UtcNow);
 
         if (code == null)
         {
-            return BadRequest(new { message = "Invalid or expired BLIK code" });
+            return BadRequest(new { message = "Invalid or expired BLIH code" });
         }
 
-        var profile = await _dbContext.Accounts.FindAsync(code.BlikProfileId);
+        var profile = await _dbContext.Accounts.FindAsync(code.BlihProfileId);
         var payerAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.AccountId == profile!.AccountId && a.Status == AccountStatus.Active);
 
         if (payerAccount == null)
         {
-            return BadRequest(new { message = "No active bank account associated with this BLIK profile" });
+            return BadRequest(new { message = "No active bank account associated with this BLIH profile" });
         }
 
-        var payment = new BlikPayment
+        var payment = new BlihPayment
         {
-            BlikPaymentId = Guid.NewGuid().ToString(),
+            BlihPaymentId = Guid.NewGuid().ToString(),
             TransactionId = Guid.NewGuid().ToString(),
-            BlikCodeId = code.BlikCodeId,
+            BlihCodeId = code.BlihCodeId,
             PayerAccountId = payerAccount.AccountId,
             MerchantId = request.MerchantId,
             Amount = request.Amount,
-            Status = BlikPaymentStatus.Pending,
+            Status = BlihPaymentStatus.Pending,
             InitiatedAt = DateTime.UtcNow,
         };
         
-        _dbContext.BlikPayments.Add(payment);
+        _dbContext.BlihPayments.Add(payment);
         await _dbContext.SaveChangesAsync();
 
         return Ok(new
         {
-            paymentId = payment.BlikPaymentId, message = "Waiting for cusomer auhtorization. "
+            paymentId = payment.BlihPaymentId, message = "Waiting for cusomer auhtorization. "
         });
 
     } 
@@ -130,14 +130,14 @@ public class BlikController : ControllerBase
     [HttpGet("payment/pending/{customerId}")]
     public async Task<IActionResult> GetPendingPayment(String accountId)
     {
-        var pendingPayment = await _dbContext.BlikPayments.Join(_dbContext.Accounts, 
-            payment => payment.BlikPaymentId,
+        var pendingPayment = await _dbContext.BlihPayments.Join(_dbContext.Accounts, 
+            payment => payment.BlihPaymentId,
             account => account.AccountId,
             (payment, account) => new {payment, account })
-            .Where(x => x.account.AccountId == accountId && x.payment.Status == BlikPaymentStatus.Pending)
+            .Where(x => x.account.AccountId == accountId && x.payment.Status == BlihPaymentStatus.Pending)
             .Select(x => new
             {
-                x.payment.BlikPaymentId,
+                x.payment.BlihPaymentId,
                 x.payment.Amount,
                 x.payment.MerchantId,
                 x.payment.InitiatedAt,
@@ -157,8 +157,8 @@ public class BlikController : ControllerBase
     [HttpPost("payment/{paymentId}/confirm")]
     public async Task<IActionResult> ConfirmPayment(String paymentId)
     {
-        var payment = await _dbContext.BlikPayments.FindAsync(paymentId);
-        if (payment == null || payment.Status != BlikPaymentStatus.Pending)
+        var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
+        if (payment == null || payment.Status != BlihPaymentStatus.Pending)
         {
             return BadRequest(new { message = "Payment not found or already processed" });
         }
@@ -168,19 +168,19 @@ public class BlikController : ControllerBase
         var account = await _dbContext.Accounts.FindAsync(payment.PayerAccountId);
         if (account == null || account.Balance < payment.Amount)
         {
-            payment.Status = BlikPaymentStatus.Failed;
+            payment.Status = BlihPaymentStatus.Failed;
             await _dbContext.SaveChangesAsync();
             return BadRequest(new { message = "Insufficient Funds." });
         }
 
         account.Balance -= payment.Amount;
-        payment.Status = BlikPaymentStatus.Approved;
+        payment.Status = BlihPaymentStatus.Approved;
         payment.CompletedAt = DateTime.UtcNow;
         
-        var code = await _dbContext.BlikCodes.FindAsync(payment.BlikCodeId);
+        var code = await _dbContext.BlihCodes.FindAsync(payment.BlihCodeId);
         if (code != null)
         {
-            code.Status = BlikCodeStatus.Used;
+            code.Status = BlihCodeStatus.Used;
             code.UsedAt = DateTime.UtcNow;
         }
 
@@ -194,13 +194,13 @@ public class BlikController : ControllerBase
     [HttpPost("payment/{paymentID}/reject")]
     public async Task<IActionResult> RejectPayment(String paymentId)
     {
-        var payment = await _dbContext.BlikPayments.FindAsync(paymentId);
-        if (payment == null || payment.Status != BlikPaymentStatus.Pending)
+        var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
+        if (payment == null || payment.Status != BlihPaymentStatus.Pending)
         {
             return BadRequest(new { message = "Payment not found or already processed" });
         }
 
-        payment.Status = BlikPaymentStatus.Failed;
+        payment.Status = BlihPaymentStatus.Failed;
         await _dbContext.SaveChangesAsync();
 
         return Ok(new { message = "Payment rejected by User" });
@@ -211,7 +211,7 @@ public class BlikController : ControllerBase
     [HttpGet("payment/{paymentId}/status")]
     public async Task<IActionResult> CheckPaymentStatus(string paymentId)
     {
-        var payment = await _dbContext.BlikPayments.FindAsync(paymentId);
+        var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
         if (payment == null)
         {
             return NotFound();
@@ -222,7 +222,7 @@ public class BlikController : ControllerBase
     
 
     // Helper method
-    private static string HashBlikCode(string code)
+    private static string HashBlihCode(string code)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(code));
         return Convert.ToHexString(bytes);
