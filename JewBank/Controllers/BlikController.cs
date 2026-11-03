@@ -71,7 +71,7 @@ public class BlikController : ControllerBase
         };
         
         _dbContext.BlikCodes.Add(blikCodeEntity);
-        _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         return Ok(new BlikCodeResponse
         {
@@ -117,7 +117,7 @@ public class BlikController : ControllerBase
         };
         
         _dbContext.BlikPayments.Add(payment);
-        _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync();
 
         return Ok(new
         {
