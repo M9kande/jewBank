@@ -21,6 +21,7 @@ public class BlikController : ControllerBase
         _dbContext = context;
     }
     
+    // Customer
     [HttpPost("code")]
     public async Task<ActionResult<BlikCodeResponse>> GenerateCode([FromBody] GenerateBlikCodeRequest request)
     {
@@ -80,6 +81,7 @@ public class BlikController : ControllerBase
 
     }
     
+    // Merchant
     [HttpPost("payment/initiate")]
     public async Task<ActionResult<InitiateBlikPaymentRequest>> InitiatePayment(
         [FromBody] InitiateBlikPaymentRequest request)
@@ -124,6 +126,7 @@ public class BlikController : ControllerBase
 
     } 
     
+    // Customer
     [HttpGet("payment/pending/{customerId}")]
     public async Task<IActionResult> GetPendingPayment(String customerId)
     {
@@ -149,6 +152,8 @@ public class BlikController : ControllerBase
         return Ok(pendingPayment);
     }
 
+    
+    // Customer
     [HttpPost("payment/{paymentId}/confirm")]
     public async Task<IActionResult> ConfirmPayment(String paymentId)
     {
@@ -185,6 +190,7 @@ public class BlikController : ControllerBase
         
     }
 
+    // Customer
     [HttpPost("payment/{paymentID}/reject")]
     public async Task<IActionResult> RejectPayment(String paymentId)
     {
@@ -199,9 +205,23 @@ public class BlikController : ControllerBase
 
         return Ok(new { message = "Payment rejected by User" });
     }
+
     
+    // Merchant 
+    [HttpGet("payment/{paymentId}/status")]
+    public async Task<IActionResult> CheckPaymentStatus(string paymentId)
+    {
+        var payment = await _dbContext.BlikPayments.FindAsync(paymentId);
+        if (payment == null)
+        {
+            return NotFound();
+        }
+        
+        return Ok(new { status = payment.Status.ToString() });
+    }
     
 
+    // Helper method
     private static string HashBlikCode(string code)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(code));
