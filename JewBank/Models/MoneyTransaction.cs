@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 public class MoneyTransaction
 {
+    [Key]
     public required string TransactionId { get; set; }
     public required string SourceAccountId { get; set; }
     public string? TargetAccountId { get; set; } // Nullable for cash deposits / ATM withdrawals

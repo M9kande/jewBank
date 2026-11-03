@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 public class AuditLog
 {
+    [Key]
     public required string AuditId { get; init; }
     public string? ActorIdentityId { get; init; }
     public ActorType ActorType { get; init; }
