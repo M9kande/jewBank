@@ -1,20 +1,19 @@
 namespace JewBank.DTOs;
 
-public class GenerateBlikCodeRequest
+public class GenerateBlihCodeRequest
 {
-    public required String CustomerId { get; set; }
     public required String AccountId { get; set; }
 }
 
-public class BlikCodeResponse
+public class BlihCodeResponse
 {
     public required String Code  { get; set; }
     public required DateTime ExpiresAt { get; set; }
 }
 
-public class InitiateBlikPaymentRequest
+public class InitiateBlihPaymentRequest
 {
-    public required String BlikCode  { get; set; }
+    public required String BlihCode  { get; set; }
     public required String MerchantId { get; set; }
     public decimal Amount { get; set; }
 }

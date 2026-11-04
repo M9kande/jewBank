@@ -1,6 +1,6 @@
 namespace JewBank.Enums;
 
-public enum BlikProfileStatus
+public enum BlihProfileStatus
 {
     Active,
     Disabled

@@ -5,7 +5,7 @@ public enum AuditEntityType
     Customer,
     Account,
     Transaction,
-    BlikTransaction,
+    BlihTransaction,
     Card,
     Session
 }

@@ -34,14 +34,6 @@ public class AccountController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Account>> CreateAccount([FromBody] CreateAccountRequest request)
     {
-        var customerExists = await _dbContext.Customers
-            .AnyAsync(c => c.CustomerId == request.CustomerId);
-
-        if (!customerExists)
-        {
-            return NotFound(new { message = $"Customer with ID {request.CustomerId} not found." });
-        }
-
         string accountNo;
         do
         {
@@ -53,7 +45,11 @@ public class AccountController : ControllerBase
         var account = new Account
         {
             AccountId = Guid.NewGuid().ToString(),
-            CustomerId = request.CustomerId,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Email = request.Email,
+            DateOfBirth = request.DateOfBirth,
+            PasswordHash = request.PasswordHash,
             AccountNo = accountNo,
             Currency = request.Currency,
             AccountType = request.AccountType,

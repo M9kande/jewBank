@@ -1,6 +1,6 @@
 namespace JewBank.Enums;
 
-public enum BlikCodeStatus
+public enum BlihCodeStatus
 {
     Active,
     Used,
