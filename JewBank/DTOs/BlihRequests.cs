@@ -1,3 +1,5 @@
+using System;
+
 namespace JewBank.DTOs;
 
 public class GenerateBlihCodeRequest

@@ -1,5 +1,8 @@
+using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using JewBank.DTOs;
 using JewBank.Enums;
 using JewBank.Models;
@@ -44,7 +47,7 @@ public class BlihController : ControllerBase
 
         do
         {
-            rawCode = Random.Shared.Next(100000, 999999).ToString();
+            rawCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             codeHash = HashBlihCode(rawCode);
 
 
@@ -86,9 +89,19 @@ public class BlihController : ControllerBase
 
     // Merchant
     [HttpPost("payment/initiate")]
-    public async Task<ActionResult<InitiateBlihPaymentRequest>> InitiatePayment(
+    public async Task<IActionResult> InitiatePayment(
         [FromBody] InitiateBlihPaymentRequest request)
     {
+        if (request.Amount <= 0)
+        {
+            return BadRequest(new { message = "Payment amount must be greater than zero." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.MerchantId))
+        {
+            return BadRequest(new { message = "Merchant ID is required." });
+        }
+
         var codeHash = HashBlihCode(request.BlihCode);
 
 
@@ -98,6 +111,13 @@ public class BlihController : ControllerBase
         if (code == null)
         {
             return BadRequest(new { message = "Invalid or expired BLIH code" });
+        }
+
+        var hasPendingPayment = await _dbContext.BlihPayments.AnyAsync(p =>
+            p.BlihCodeId == code.BlihCodeId && p.Status == BlihPaymentStatus.Pending);
+        if (hasPendingPayment)
+        {
+            return Conflict(new { message = "A payment is already pending for this BLIH code." });
         }
 
         var profile = await _dbContext.BlihProfiles.FindAsync(code.BlihProfileId);
@@ -136,8 +156,8 @@ public class BlihController : ControllerBase
     }
 
     // Customer
-    [HttpGet("payment/pending/{customerId}")]
-    public async Task<IActionResult> GetPendingPayment(String accountId)
+    [HttpGet("payment/pending/{accountId}")]
+    public async Task<IActionResult> GetPendingPayment(string accountId)
     {
         var pendingPayment = await _dbContext.BlihPayments.Join(_dbContext.Accounts,
                 payment => payment.PayerAccountId,
@@ -155,7 +175,7 @@ public class BlihController : ControllerBase
 
         if (pendingPayment == null)
         {
-            return NotFound(new { message = "No peding payments found" });
+            return NotFound(new { message = "No pending payments found." });
         }
 
         return Ok(pendingPayment);
@@ -172,14 +192,19 @@ public class BlihController : ControllerBase
             return BadRequest(new { message = "Payment not found or already processed" });
         }
 
-        ;
-
         var account = await _dbContext.Accounts.FindAsync(payment.PayerAccountId);
-        if (account == null || account.Balance < payment.Amount)
+        if (account == null || account.Status != AccountStatus.Active || payment.Amount <= 0)
         {
             payment.Status = BlihPaymentStatus.Failed;
             await _dbContext.SaveChangesAsync();
-            return BadRequest(new { message = "Insufficient Funds." });
+            return BadRequest(new { message = "The payer account is unavailable or the payment amount is invalid." });
+        }
+
+        if (account.Balance < payment.Amount)
+        {
+            payment.Status = BlihPaymentStatus.Failed;
+            await _dbContext.SaveChangesAsync();
+            return BadRequest(new { message = "Insufficient funds." });
         }
 
         account.Balance -= payment.Amount;
@@ -199,8 +224,8 @@ public class BlihController : ControllerBase
     }
 
     // Customer
-    [HttpPost("payment/{paymentID}/reject")]
-    public async Task<IActionResult> RejectPayment(String paymentId)
+    [HttpPost("payment/{paymentId}/reject")]
+    public async Task<IActionResult> RejectPayment(string paymentId)
     {
         var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
         if (payment == null || payment.Status != BlihPaymentStatus.Pending)

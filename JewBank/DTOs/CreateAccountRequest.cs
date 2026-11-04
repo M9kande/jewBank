@@ -1,4 +1,6 @@
-﻿namespace JewBank.DTOs;
+﻿using System;
+
+namespace JewBank.DTOs;
 
 using JewBank.Enums;
 using System.ComponentModel.DataAnnotations;
