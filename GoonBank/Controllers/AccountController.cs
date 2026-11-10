@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 using GoonBank.DTOs;
 using GoonBank.Enums;
+using GoonBank.Extensions;
 using GoonBank.Models;
 using GoonBank.Services;
 
@@ -11,6 +13,7 @@ namespace GoonBank.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AccountController : ControllerBase
 {
     private readonly JewBankDbContext _dbContext;
@@ -25,6 +28,12 @@ public class AccountController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<AccountResponse>> GetAccount(string id)
     {
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != id)
+        {
+            return Forbid();
+        }
+
         var account = await _dbContext.Accounts.FindAsync(id);
 
         if (account == null)
@@ -36,6 +45,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<ActionResult<AccountResponse>> CreateAccount([FromBody] CreateAccountRequest request)
     {
         if (request.DateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
@@ -92,6 +102,12 @@ public class AccountController : ControllerBase
     [HttpGet("{id}/transactions")]
     public async Task<IActionResult> GetTransactions(string id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != id)
+        {
+            return Forbid();
+        }
+
         var account = await _dbContext.Accounts.FindAsync(id);
         if (account == null)
         {
@@ -115,6 +131,12 @@ public class AccountController : ControllerBase
     [HttpPatch("{id}/status")]
     public async Task<ActionResult> ChangeAccountStatus(string id, [FromBody] AccountStatus newStatus)
     {
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != id)
+        {
+            return Forbid();
+        }
+
         var account = await _dbContext.Accounts.FindAsync(id);
 
         if (account == null)

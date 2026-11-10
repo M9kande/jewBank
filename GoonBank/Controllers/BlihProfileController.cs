@@ -1,7 +1,9 @@
 using GoonBank.DTOs;
 using GoonBank.Enums;
+using GoonBank.Extensions;
 using GoonBank.Models;
 using GoonBank.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +11,7 @@ namespace GoonBank.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BlihProfileController : ControllerBase
 {
     private readonly JewBankDbContext _dbContext;
@@ -23,6 +26,12 @@ public class BlihProfileController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<BlihProfile>> CreateProfile([FromBody] CreateBlihProfileRequest request)
     {
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != request.AccountId)
+        {
+            return Forbid();
+        }
+
         var account = await _dbContext.Accounts.FindAsync(request.AccountId);
         if (account == null)
         {
@@ -73,6 +82,12 @@ public class BlihProfileController : ControllerBase
     [HttpGet("{accountId}")]
     public async Task<ActionResult<BlihProfile>> GetProfile(string accountId)
     {
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != accountId)
+        {
+            return Forbid();
+        }
+
         var profile = await _dbContext.BlihProfiles
             .FirstOrDefaultAsync(candidate => candidate.AccountId == accountId);
 

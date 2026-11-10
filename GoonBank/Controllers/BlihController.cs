@@ -2,8 +2,10 @@ using System.Security.Cryptography;
 using System.Text;
 using GoonBank.DTOs;
 using GoonBank.Enums;
+using GoonBank.Extensions;
 using GoonBank.Models;
 using GoonBank.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +13,7 @@ namespace GoonBank.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BlihController : ControllerBase
 {
     private readonly JewBankDbContext _dbContext;
@@ -26,6 +29,12 @@ public class BlihController : ControllerBase
     [HttpPost("code")]
     public async Task<ActionResult<BlihCodeResponse>> GenerateCode([FromBody] GenerateBlihCodeRequest request)
     {
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != request.AccountId)
+        {
+            return Forbid();
+        }
+
         var profile = await _dbContext.BlihProfiles.FirstOrDefaultAsync(p => p.AccountId == request.AccountId);
 
         if (profile == null || profile.Status != BlihProfileStatus.Active)
@@ -90,8 +99,9 @@ public class BlihController : ControllerBase
         });
     }
 
-    // Merchant
+    // Merchant (or unauthenticated merchant terminal)
     [HttpPost("payment/initiate")]
+    [AllowAnonymous]
     public async Task<ActionResult> InitiatePayment([FromBody] InitiateBlihPaymentRequest request)
     {
         var codeHash = HashBlihCode(request.BlihCode);
@@ -118,7 +128,7 @@ public class BlihController : ControllerBase
             return BadRequest(new { message = "No active bank account associated with this BLIH profile." });
         }
 
-        // Consume the code immediately to prevent concurrent re-use
+        // Consume code immediately so it cannot be double-used
         code.Status = BlihCodeStatus.Used;
         code.UsedAt = DateTime.UtcNow;
 
@@ -155,6 +165,12 @@ public class BlihController : ControllerBase
     [HttpGet("payment/pending/{accountId}")]
     public async Task<IActionResult> GetPendingPayment(string accountId)
     {
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != accountId)
+        {
+            return Forbid();
+        }
+
         var now = DateTime.UtcNow;
 
         var pendingPayment = await _dbContext.BlihPayments
@@ -188,16 +204,22 @@ public class BlihController : ControllerBase
     [HttpPost("payment/{paymentId}/confirm")]
     public async Task<IActionResult> ConfirmPayment(string paymentId)
     {
+        var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
+        if (payment == null || payment.Status != BlihPaymentStatus.Pending)
+        {
+            return BadRequest(new { message = "Payment not found or already processed." });
+        }
+
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != payment.PayerAccountId)
+        {
+            return Forbid();
+        }
+
         await using var dbTransaction = await _dbContext.Database.BeginTransactionAsync();
 
         try
         {
-            var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
-            if (payment == null || payment.Status != BlihPaymentStatus.Pending)
-            {
-                return BadRequest(new { message = "Payment not found or already processed." });
-            }
-
             // Expiry check (2 minutes)
             if (payment.InitiatedAt.AddMinutes(2) < DateTime.UtcNow)
             {
@@ -278,6 +300,12 @@ public class BlihController : ControllerBase
             return BadRequest(new { message = "Payment not found or already processed." });
         }
 
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != payment.PayerAccountId)
+        {
+            return Forbid();
+        }
+
         payment.Status = BlihPaymentStatus.Failed;
         await _dbContext.SaveChangesAsync();
 
@@ -293,6 +321,7 @@ public class BlihController : ControllerBase
 
     // Merchant 
     [HttpGet("payment/{paymentId}/status")]
+    [AllowAnonymous]
     public async Task<IActionResult> CheckPaymentStatus(string paymentId)
     {
         var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
