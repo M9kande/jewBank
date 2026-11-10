@@ -1,0 +1,100 @@
+@HostAddress = http://localhost:5001
+
+### 1. Register a new Account
+POST {{HostAddress}}/api/Account
+Content-Type: application/json
+
+{
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "email": "jan.kowalski@example.com",
+  "passwordHash": "Secret123!",
+  "dateOfBirth": "1992-05-15",
+  "currency": "PLN",
+  "accountType": 0
+}
+
+### 2. Login to get JWT Bearer Token
+# @name login
+POST {{HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "jan.kowalski@example.com",
+  "password": "Secret123!"
+}
+
+### Store token from login
+@authToken = {{login.response.body.token}}
+@accountId = {{login.response.body.accountId}}
+
+### 3. Get Authenticated User Profile
+GET {{HostAddress}}/api/auth/me
+Authorization: Bearer {{authToken}}
+
+### 4. Get Account Details
+GET {{HostAddress}}/api/Account/{{accountId}}
+Authorization: Bearer {{authToken}}
+
+### 5. Create Deposit Transaction
+# @name deposit
+POST {{HostAddress}}/api/Transaction
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "sourceAccountId": "{{accountId}}",
+  "amount": 500.00,
+  "transactionType": 2,
+  "description": "Cash deposit"
+}
+
+### 6. Execute Deposit Transaction
+@txId = {{deposit.response.body.transactionId}}
+PUT {{HostAddress}}/api/Transaction/{{txId}}/execute
+Authorization: Bearer {{authToken}}
+
+### 7. View Account Transaction History
+GET {{HostAddress}}/api/Account/{{accountId}}/transactions
+Authorization: Bearer {{authToken}}
+
+### 8. Register BLIH Profile
+POST {{HostAddress}}/api/BlihProfile
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "accountId": "{{accountId}}",
+  "phoneHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
+
+### 9. Generate BLIH Code
+# @name blihCode
+POST {{HostAddress}}/api/Blih/code
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "accountId": "{{accountId}}"
+}
+
+### 10. Merchant Initiates BLIH Payment
+@rawBlihCode = {{blihCode.response.body.code}}
+# @name blihPayment
+POST {{HostAddress}}/api/Blih/payment/initiate
+Content-Type: application/json
+
+{
+  "blihCode": "{{rawBlihCode}}",
+  "merchantId": "MERCHANT_STORE_1",
+  "amount": 50.00
+}
+
+### 11. Customer Checks Pending BLIH Payment
+GET {{HostAddress}}/api/Blih/payment/pending/{{accountId}}
+Authorization: Bearer {{authToken}}
+
+### 12. Customer Confirms BLIH Payment
+@paymentId = {{blihPayment.response.body.paymentId}}
+POST {{HostAddress}}/api/Blih/payment/{{paymentId}}/confirm
+Authorization: Bearer {{authToken}}
