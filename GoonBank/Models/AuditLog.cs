@@ -1,6 +1,8 @@
-namespace JewBank.Models;
+using GoonBank.Enums;
 
-using JewBank.Enums;
+namespace GoonBank.Models;
+
+using GoonBank.Enums;
 
 using System.ComponentModel.DataAnnotations;
 

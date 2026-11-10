@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using JewBank.Enums;
+using GoonBank.Enums;
 
-namespace JewBank.DTOs;
+namespace GoonBank.DTOs;
 
 public class CreateTransactionRequest : IValidatableObject
 {

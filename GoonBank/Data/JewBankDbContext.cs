@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GoonBank;
 
-public class GoonBankDbContext : DbContext
+public class JewBankDbContext : DbContext
 {
-    public GoonBankDbContext(DbContextOptions<GoonBankDbContext> options) : base(options) {}
+    public JewBankDbContext(DbContextOptions<JewBankDbContext> options) : base(options) {}
     
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<MoneyTransaction> Transactions => Set<MoneyTransaction>();

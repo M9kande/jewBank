@@ -1,4 +1,4 @@
-namespace JewBank.DTOs;
+namespace GoonBank.DTOs;
 
 public class CreateBlihProfileRequest
 {

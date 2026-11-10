@@ -1,9 +1,10 @@
 using System.Transactions;
-using JewBank.DTOs;
-using JewBank.Enums;
-using JewBank.Models;
+using GoonBank;
+using GoonBank.DTOs;
+using GoonBank.Enums;
+using GoonBank.Models;
 using Microsoft.AspNetCore.Mvc;
-using TransactionStatus = JewBank.Enums.TransactionStatus;
+using TransactionStatus = GoonBank.Enums.TransferStatus;
 
 namespace JewBank.Controllers;
 
@@ -11,9 +12,9 @@ namespace JewBank.Controllers;
 [Route("api/[controller]")]
 public class TransactionController : ControllerBase
 {
-    private readonly JewBankDbContext _dbContext;
+    private readonly GoonBankDbContext _dbContext;
 
-    public TransactionController(JewBankDbContext context)
+    public TransactionController(GoonBankDbContext context)
     {
         _dbContext = context;
     }

@@ -1,4 +1,4 @@
-using JewBank;
+using GoonBank;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

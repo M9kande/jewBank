@@ -1,6 +1,8 @@
-﻿namespace JewBank.DTOs;
+﻿using GoonBank.Enums;
 
-using JewBank.Enums;
+namespace GoonBank.DTOs;
+
+using GoonBank.Enums;
 using System.ComponentModel.DataAnnotations;
 
 public class CreateAccountRequest

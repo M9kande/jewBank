@@ -1,4 +1,4 @@
-namespace JewBank.Enums;
+namespace GoonBank.Enums;
 
 public enum TransferType
 {

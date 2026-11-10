@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
-using JewBank.DTOs;
-using JewBank.Enums;
-using JewBank.Models;
+using GoonBank.DTOs;
+using GoonBank.Enums;
+using GoonBank.Models;
 
-namespace JewBank.Controllers;
+namespace GoonBank.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

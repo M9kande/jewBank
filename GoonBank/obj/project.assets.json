@@ -567,11 +567,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/jakubadach/Documents/JewBank/JewBank/JewBank.csproj",
-      "projectName": "JewBank",
-      "projectPath": "/Users/jakubadach/Documents/JewBank/JewBank/JewBank.csproj",
+      "projectUniqueName": "/Users/jakubadach/Documents/JewBank/GoonBank/GoonBank.csproj",
+      "projectName": "GoonBank",
+      "projectPath": "/Users/jakubadach/Documents/JewBank/GoonBank/GoonBank.csproj",
       "packagesPath": "/Users/jakubadach/.nuget/packages/",
-      "outputPath": "/Users/jakubadach/Documents/JewBank/JewBank/obj/",
+      "outputPath": "/Users/jakubadach/Documents/JewBank/GoonBank/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/jakubadach/.nuget/NuGet/NuGet.Config"
