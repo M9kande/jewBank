@@ -1,10 +1,7 @@
 using GoonBank.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace GoonBank.Models;
-
-using GoonBank.Enums;
-
-using System.ComponentModel.DataAnnotations;
 
 public class AuditLog
 {

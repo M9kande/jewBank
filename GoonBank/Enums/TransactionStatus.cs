@@ -1,6 +1,6 @@
 namespace GoonBank.Enums;
 
-public enum TransferStatus
+public enum TransactionStatus
 {
     Pending,
     Completed,

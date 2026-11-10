@@ -2,8 +2,6 @@ using GoonBank.Enums;
 
 namespace GoonBank.Models;
 
-using GoonBank.Enums;
-
 public class BlihCode
 {
     public required string BlihCodeId { get; set; } = string.Empty;

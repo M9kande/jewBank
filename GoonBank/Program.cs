@@ -1,10 +1,12 @@
 using GoonBank;
+using GoonBank.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<JewBankDbContext>(options =>
     options.UseSqlite("Data Source=jewbank.db"));
 
+builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
@@ -13,7 +15,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider.GetRequiredService<JewBankDbContext>();
-    services.Database.Migrate();
+    services.Database.EnsureCreated();
 }
 
 if (app.Environment.IsDevelopment())

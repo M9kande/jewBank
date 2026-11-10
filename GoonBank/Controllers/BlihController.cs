@@ -3,6 +3,7 @@ using System.Text;
 using GoonBank.DTOs;
 using GoonBank.Enums;
 using GoonBank.Models;
+using GoonBank.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +14,12 @@ namespace GoonBank.Controllers;
 public class BlihController : ControllerBase
 {
     private readonly JewBankDbContext _dbContext;
+    private readonly IAuditService _auditService;
 
-    public BlihController(JewBankDbContext context)
+    public BlihController(JewBankDbContext context, IAuditService auditService)
     {
         _dbContext = context;
+        _auditService = auditService;
     }
 
     // Customer
@@ -27,43 +30,39 @@ public class BlihController : ControllerBase
 
         if (profile == null || profile.Status != BlihProfileStatus.Active)
         {
-            return BadRequest(new { message = "Customer has not enabled BLIH." });
+            return BadRequest(new { message = "Customer has not enabled BLIH or profile is not active." });
         }
 
-        var accountExists = await _dbContext.Accounts.AnyAsync(account =>
-            account.AccountId == request.AccountId &&
-            account.Status == AccountStatus.Active);
-        if (!accountExists)
+        var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.AccountId == request.AccountId);
+        if (account == null || account.Status != AccountStatus.Active)
         {
             return BadRequest(new { message = "No active bank account associated with this customer." });
         }
 
-        String rawCode;
-        String codeHash;
+        string rawCode;
+        string codeHash;
         bool isCodeTaken;
 
         do
         {
-            rawCode = Random.Shared.Next(100000, 999999).ToString();
+            rawCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             codeHash = HashBlihCode(rawCode);
 
-
             isCodeTaken = await _dbContext.BlihCodes.AnyAsync(c =>
-                (c.CodeHash == codeHash && c.Status == BlihCodeStatus.Active && c.ExpiresAt > DateTime.UtcNow));
+                c.CodeHash == codeHash && c.Status == BlihCodeStatus.Active && c.ExpiresAt > DateTime.UtcNow);
         } while (isCodeTaken);
-
 
         var activeCodes = await _dbContext.BlihCodes
             .Where(b => b.BlihProfileId == profile.BlihProfileId && b.Status == BlihCodeStatus.Active)
             .ToListAsync();
-
 
         foreach (var code in activeCodes)
         {
             code.Status = BlihCodeStatus.Expired;
         }
 
-        var expiresAt = DateTime.UtcNow.AddHours(2);
+        // Standard BLIK/BLIH codes are valid for 2 minutes
+        var expiresAt = DateTime.UtcNow.AddMinutes(2);
 
         var blihCodeEntity = new BlihCode
         {
@@ -77,6 +76,13 @@ public class BlihController : ControllerBase
         _dbContext.BlihCodes.Add(blihCodeEntity);
         await _dbContext.SaveChangesAsync();
 
+        await _auditService.LogAsync(
+            AuditEntityType.BlihTransaction,
+            blihCodeEntity.BlihCodeId,
+            AuditAction.Create,
+            customerId: account.AccountId,
+            details: new { ExpiresAt = expiresAt });
+
         return Ok(new BlihCodeResponse
         {
             Code = rawCode,
@@ -86,18 +92,16 @@ public class BlihController : ControllerBase
 
     // Merchant
     [HttpPost("payment/initiate")]
-    public async Task<ActionResult<InitiateBlihPaymentRequest>> InitiatePayment(
-        [FromBody] InitiateBlihPaymentRequest request)
+    public async Task<ActionResult> InitiatePayment([FromBody] InitiateBlihPaymentRequest request)
     {
         var codeHash = HashBlihCode(request.BlihCode);
-
 
         var code = await _dbContext.BlihCodes.FirstOrDefaultAsync(c =>
             c.CodeHash == codeHash && c.Status == BlihCodeStatus.Active && c.ExpiresAt > DateTime.UtcNow);
 
         if (code == null)
         {
-            return BadRequest(new { message = "Invalid or expired BLIH code" });
+            return BadRequest(new { message = "Invalid or expired BLIH code." });
         }
 
         var profile = await _dbContext.BlihProfiles.FindAsync(code.BlihProfileId);
@@ -111,8 +115,12 @@ public class BlihController : ControllerBase
 
         if (payerAccount == null)
         {
-            return BadRequest(new { message = "No active bank account associated with this BLIH profile" });
+            return BadRequest(new { message = "No active bank account associated with this BLIH profile." });
         }
+
+        // Consume the code immediately to prevent concurrent re-use
+        code.Status = BlihCodeStatus.Used;
+        code.UsedAt = DateTime.UtcNow;
 
         var payment = new BlihPayment
         {
@@ -129,91 +137,159 @@ public class BlihController : ControllerBase
         _dbContext.BlihPayments.Add(payment);
         await _dbContext.SaveChangesAsync();
 
+        await _auditService.LogAsync(
+            AuditEntityType.BlihTransaction,
+            payment.BlihPaymentId,
+            AuditAction.Create,
+            customerId: payerAccount.AccountId,
+            details: new { payment.MerchantId, payment.Amount });
+
         return Ok(new
         {
-            paymentId = payment.BlihPaymentId, message = "Waiting for cusomer auhtorization. "
+            paymentId = payment.BlihPaymentId,
+            message = "Waiting for customer authorization."
         });
     }
 
     // Customer
-    [HttpGet("payment/pending/{customerId}")]
-    public async Task<IActionResult> GetPendingPayment(String accountId)
+    [HttpGet("payment/pending/{accountId}")]
+    public async Task<IActionResult> GetPendingPayment(string accountId)
     {
-        var pendingPayment = await _dbContext.BlihPayments.Join(_dbContext.Accounts,
-                payment => payment.PayerAccountId,
-                account => account.AccountId,
-                (payment, account) => new { payment, account })
-            .Where(x => x.account.AccountId == accountId && x.payment.Status == BlihPaymentStatus.Pending)
-            .Select(x => new
-            {
-                x.payment.BlihPaymentId,
-                x.payment.Amount,
-                x.payment.MerchantId,
-                x.payment.InitiatedAt,
-            })
+        var now = DateTime.UtcNow;
+
+        var pendingPayment = await _dbContext.BlihPayments
+            .Where(p => p.PayerAccountId == accountId && p.Status == BlihPaymentStatus.Pending)
+            .OrderByDescending(p => p.InitiatedAt)
             .FirstOrDefaultAsync();
 
         if (pendingPayment == null)
         {
-            return NotFound(new { message = "No peding payments found" });
+            return NotFound(new { message = "No pending payments found." });
         }
 
-        return Ok(pendingPayment);
-    }
+        // Pending payments expire after 2 minutes
+        if (pendingPayment.InitiatedAt.AddMinutes(2) < now)
+        {
+            pendingPayment.Status = BlihPaymentStatus.Failed;
+            await _dbContext.SaveChangesAsync();
+            return NotFound(new { message = "Pending payment has expired." });
+        }
 
+        return Ok(new
+        {
+            pendingPayment.BlihPaymentId,
+            pendingPayment.Amount,
+            pendingPayment.MerchantId,
+            pendingPayment.InitiatedAt
+        });
+    }
 
     // Customer
     [HttpPost("payment/{paymentId}/confirm")]
-    public async Task<IActionResult> ConfirmPayment(String paymentId)
+    public async Task<IActionResult> ConfirmPayment(string paymentId)
     {
-        var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
-        if (payment == null || payment.Status != BlihPaymentStatus.Pending)
-        {
-            return BadRequest(new { message = "Payment not found or already processed" });
-        }
+        await using var dbTransaction = await _dbContext.Database.BeginTransactionAsync();
 
-        ;
-
-        var account = await _dbContext.Accounts.FindAsync(payment.PayerAccountId);
-        if (account == null || account.Balance < payment.Amount)
+        try
         {
-            payment.Status = BlihPaymentStatus.Failed;
+            var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
+            if (payment == null || payment.Status != BlihPaymentStatus.Pending)
+            {
+                return BadRequest(new { message = "Payment not found or already processed." });
+            }
+
+            // Expiry check (2 minutes)
+            if (payment.InitiatedAt.AddMinutes(2) < DateTime.UtcNow)
+            {
+                payment.Status = BlihPaymentStatus.Failed;
+                await _dbContext.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
+                return BadRequest(new { message = "Payment authorization has timed out." });
+            }
+
+            var account = await _dbContext.Accounts.FindAsync(payment.PayerAccountId);
+            if (account == null || account.Status != AccountStatus.Active)
+            {
+                payment.Status = BlihPaymentStatus.Failed;
+                await _dbContext.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
+                return BadRequest(new { message = "Account is not active." });
+            }
+
+            if (account.Balance < payment.Amount)
+            {
+                payment.Status = BlihPaymentStatus.Failed;
+                await _dbContext.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
+                return BadRequest(new { message = "Insufficient funds." });
+            }
+
+            account.Balance -= payment.Amount;
+            payment.Status = BlihPaymentStatus.Approved;
+            payment.CompletedAt = DateTime.UtcNow;
+
+            // Credit merchant if they hold an account in the bank
+            var merchantAccount = await _dbContext.Accounts.FindAsync(payment.MerchantId);
+            if (merchantAccount != null && merchantAccount.Status == AccountStatus.Active)
+            {
+                merchantAccount.Balance += payment.Amount;
+            }
+
+            // Create a formal MoneyTransaction so it appears in the customer's transaction history
+            var moneyTransaction = new MoneyTransaction
+            {
+                TransactionId = payment.TransactionId,
+                SourceAccountId = account.AccountId,
+                TargetAccountId = payment.MerchantId,
+                Amount = payment.Amount,
+                Type = TransactionType.Blih,
+                Status = TransactionStatus.Completed,
+                Title = $"BLIH Payment - {payment.MerchantId}",
+                CreatedAt = DateTime.UtcNow
+            };
+            await _dbContext.Transactions.AddAsync(moneyTransaction);
+
             await _dbContext.SaveChangesAsync();
-            return BadRequest(new { message = "Insufficient Funds." });
+            await dbTransaction.CommitAsync();
+
+            await _auditService.LogAsync(
+                AuditEntityType.BlihTransaction,
+                payment.BlihPaymentId,
+                AuditAction.Update,
+                customerId: account.AccountId,
+                details: new { Status = "Approved", payment.Amount, payment.MerchantId });
+
+            return Ok(new { message = "Payment authorized successfully." });
         }
-
-        account.Balance -= payment.Amount;
-        payment.Status = BlihPaymentStatus.Approved;
-        payment.CompletedAt = DateTime.UtcNow;
-
-        var code = await _dbContext.BlihCodes.FindAsync(payment.BlihCodeId);
-        if (code != null)
+        catch (Exception)
         {
-            code.Status = BlihCodeStatus.Used;
-            code.UsedAt = DateTime.UtcNow;
+            await dbTransaction.RollbackAsync();
+            throw;
         }
-
-        await _dbContext.SaveChangesAsync();
-
-        return Ok(new { message = "Payment authorized successfully" });
     }
 
     // Customer
-    [HttpPost("payment/{paymentID}/reject")]
-    public async Task<IActionResult> RejectPayment(String paymentId)
+    [HttpPost("payment/{paymentId}/reject")]
+    public async Task<IActionResult> RejectPayment(string paymentId)
     {
         var payment = await _dbContext.BlihPayments.FindAsync(paymentId);
         if (payment == null || payment.Status != BlihPaymentStatus.Pending)
         {
-            return BadRequest(new { message = "Payment not found or already processed" });
+            return BadRequest(new { message = "Payment not found or already processed." });
         }
 
         payment.Status = BlihPaymentStatus.Failed;
         await _dbContext.SaveChangesAsync();
 
-        return Ok(new { message = "Payment rejected by User" });
-    }
+        await _auditService.LogAsync(
+            AuditEntityType.BlihTransaction,
+            payment.BlihPaymentId,
+            AuditAction.Update,
+            customerId: payment.PayerAccountId,
+            details: new { Status = "Rejected" });
 
+        return Ok(new { message = "Payment rejected by user." });
+    }
 
     // Merchant 
     [HttpGet("payment/{paymentId}/status")]
@@ -228,8 +304,6 @@ public class BlihController : ControllerBase
         return Ok(new { status = payment.Status.ToString() });
     }
 
-
-    // Helper method
     private static string HashBlihCode(string code)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(code));

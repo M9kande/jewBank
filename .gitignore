@@ -1,0 +1,25 @@
+## Build and temporary files
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## IDEs
+.idea/
+.vscode/
+.local/
+
+## OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+## SQLite temporary files
+*.db-shm
+*.db-wal

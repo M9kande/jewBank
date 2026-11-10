@@ -1,19 +1,27 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace GoonBank.DTOs;
 
 public class GenerateBlihCodeRequest
 {
-    public required String AccountId { get; set; }
+    [Required]
+    public required string AccountId { get; set; }
 }
 
 public class BlihCodeResponse
 {
-    public required String Code  { get; set; }
+    public required string Code { get; set; }
     public required DateTime ExpiresAt { get; set; }
 }
 
 public class InitiateBlihPaymentRequest
 {
-    public required String BlihCode  { get; set; }
-    public required String MerchantId { get; set; }
+    [Required]
+    public required string BlihCode { get; set; }
+
+    [Required]
+    public required string MerchantId { get; set; }
+
+    [Range(0.01, 1_000_000_000, ErrorMessage = "Amount must be greater than 0.")]
     public decimal Amount { get; set; }
 }

@@ -2,8 +2,6 @@ using GoonBank.Enums;
 
 namespace GoonBank.Models;
 
-using GoonBank.Enums;
-
 public class BlihPayment
 {
     public required string BlihPaymentId { get; set; } = string.Empty;

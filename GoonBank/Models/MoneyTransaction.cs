@@ -1,9 +1,7 @@
 using GoonBank.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace GoonBank.Models;
-
-using GoonBank.Enums;
-using System.ComponentModel.DataAnnotations;
 
 public class MoneyTransaction
 {
@@ -15,6 +13,6 @@ public class MoneyTransaction
     public TransactionType Type { get; set; } // Transfer, Deposit, Withdrawal, etc.
     public TransactionStatus Status { get; set; }
     public string Title { get; set; } = string.Empty;
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
