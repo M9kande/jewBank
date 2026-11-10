@@ -1,8 +1,10 @@
 using GoonBank;
 using GoonBank.DTOs;
 using GoonBank.Enums;
+using GoonBank.Extensions;
 using GoonBank.Models;
 using GoonBank.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +12,7 @@ namespace GoonBank.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TransactionController : ControllerBase
 {
     private readonly JewBankDbContext _dbContext;
@@ -31,12 +34,24 @@ public class TransactionController : ControllerBase
             return NotFound(new { message = "Transaction not found." });
         }
 
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != transaction.SourceAccountId && currentUserId != transaction.TargetAccountId)
+        {
+            return Forbid();
+        }
+
         return Ok(transaction);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateTransaction([FromBody] CreateTransactionRequest request)
     {
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != request.SourceAccountId)
+        {
+            return Forbid();
+        }
+
         var sourceAccount = await _dbContext.Accounts.FindAsync(request.SourceAccountId);
         if (sourceAccount == null)
         {
@@ -104,6 +119,12 @@ public class TransactionController : ControllerBase
             return NotFound(new { message = $"Transaction with ID {id} not found." });
         }
 
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != transaction.SourceAccountId)
+        {
+            return Forbid();
+        }
+
         if (transaction.Status != TransactionStatus.Pending)
         {
             return BadRequest(new { message = $"Cannot modify status of a transaction that is already {transaction.Status}." });
@@ -136,6 +157,12 @@ public class TransactionController : ControllerBase
             return NotFound(new { message = $"Transaction with ID {id} not found." });
         }
 
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != transaction.SourceAccountId)
+        {
+            return Forbid();
+        }
+
         if (transaction.Status != TransactionStatus.Pending)
         {
             return BadRequest(new { message = $"Cannot cancel a transaction that is already {transaction.Status}." });
@@ -156,17 +183,23 @@ public class TransactionController : ControllerBase
     [HttpPut("{id}/execute")]
     public async Task<IActionResult> ExecuteTransaction(string id)
     {
+        var transaction = await _dbContext.Transactions.FindAsync(id);
+
+        if (transaction == null)
+        {
+            return NotFound(new { message = $"Transaction with ID {id} not found." });
+        }
+
+        var currentUserId = User.GetAccountId();
+        if (currentUserId != transaction.SourceAccountId)
+        {
+            return Forbid();
+        }
+
         await using var dbTransaction = await _dbContext.Database.BeginTransactionAsync();
 
         try
         {
-            var transaction = await _dbContext.Transactions.FindAsync(id);
-
-            if (transaction == null)
-            {
-                return NotFound(new { message = $"Transaction with ID {id} not found." });
-            }
-
             if (transaction.Type == TransactionType.Blih)
             {
                 return BadRequest(new { message = "BLIH transactions must be executed through the BLIH payment flow." });
