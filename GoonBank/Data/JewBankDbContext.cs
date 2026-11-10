@@ -1,12 +1,11 @@
-﻿using JewBank.Models;
-
+﻿using GoonBank.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace JewBank;
+namespace GoonBank;
 
-public class JewBankDbContext : DbContext
+public class GoonBankDbContext : DbContext
 {
-    public JewBankDbContext(DbContextOptions<JewBankDbContext> options) : base(options) {}
+    public GoonBankDbContext(DbContextOptions<GoonBankDbContext> options) : base(options) {}
     
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<MoneyTransaction> Transactions => Set<MoneyTransaction>();
